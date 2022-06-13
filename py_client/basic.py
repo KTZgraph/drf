@@ -53,7 +53,13 @@ endpoint = "http://httpbin.org/anything" # zwróci odpwoiedź formatted data tha
 # idea REST API it can be consumed across all kinds of different clients
 #so you can have almos unlimited amount of clients consuming a REST API as long as they can do these HTTP requests
 
-endpoint = "http://httpbin.org/anything"
+# endpoint = "http://httpbin.org/anything"
+# get_response = requests.get(endpoint, json={'query': 'Hello World'}) # HTTP  Request
+# print(get_response.text) #print raw response
+# print(get_response.status_code)
+
+
+endpoint = "http://localhost:8000/"
 get_response = requests.get(endpoint, json={'query': 'Hello World'}) # HTTP  Request
 print(get_response.text) #print raw response
 print(get_response.status_code)
