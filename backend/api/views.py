@@ -8,6 +8,8 @@ from products.models import Product
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+#4 wersja
+from products.serializers import ProductSerializer
 
 # def api_home1(request, *args, **kwargs):
 #     # ma emulować echo danych podonie jak "http://httpbin.org/anything"
@@ -54,6 +56,22 @@ from rest_framework.decorators import api_view
 #     return JsonResponse(data)
 
 
+# @api_view(['GET']) # drf
+# def api_home3(request, *args, **kwargs):
+#     """
+#     DRF API View
+#     """
+#     #bez DRF sprawdzanie metod
+#     # if request.method != "POST":
+#     #     return Response({'detail': 'GET not allowed'}, status=405)
+#     model_data = Product.objects.all().order_by('?').first()
+#     data = {}
+#     if model_data:
+#         data = model_to_dict(model_data, fields=['id', 'title', 'price', 'sale_price']) #sale_price niewidoczne w kliencie
+
+
+#     return Response(data) #drf
+
 @api_view(['GET']) # drf
 def api_home(request, *args, **kwargs):
     """
@@ -62,9 +80,10 @@ def api_home(request, *args, **kwargs):
     #bez DRF sprawdzanie metod
     # if request.method != "POST":
     #     return Response({'detail': 'GET not allowed'}, status=405)
-    model_data = Product.objects.all().order_by('?').first()
+    instance = Product.objects.all().order_by('?').first()
     data = {}
-    if model_data:
-        data = model_to_dict(model_data, fields=['id', 'title', 'price'])
-
-    return Response(data) #drf
+    if instance:
+        # data = model_to_dict(instance, fields=['id', 'title', 'price', 'sale_price'])
+        # serilizer za nas zrobi model to dict i jeszcze dołoży pola z metod jak 'sale_price' czy swoje dynamiczne pole 'my_dicsount' do JSONa
+        data = ProductSerializer(instance).data #serilizers data in nice and clean way
+    return Response(data) #drf klient wszystkie pola z serializera {"title":"Hello World again","content":"This product is amazing","price":"12.00","sale_price":"9.60","get_discount":"122"}
