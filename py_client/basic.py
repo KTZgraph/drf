@@ -60,7 +60,10 @@ endpoint = "http://httpbin.org/anything" # zwróci odpwoiedź formatted data tha
 
 
 endpoint = "http://localhost:8000/api/"
-get_response = requests.get(endpoint, json={'query': 'Hello World'}) # HTTP  Request
-print(get_response.text) #print raw response
-print(get_response.status_code)
-print(get_response.json()['message'])
+# get_response = requests.get(endpoint, params={'abc': 123}) # HTTP  Request 
+# params to są query parameters http://localhost:8000/api/?this_arg=this_value
+# tutaj http://localhost:8000/api/?abc=123 można je bezpośrednio w urlu zawrzec
+get_response = requests.get(endpoint, params={'abc': 123} ,json={'query': 'Hello World'}) # HTTP  Request 
+# print(get_response.text) #print raw response
+# print(get_response.status_code)
+print(get_response.json())
