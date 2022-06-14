@@ -53,16 +53,7 @@ def product_alt_view(request, pk=None, *args, **kwargs):
 
 
 
-class ProductUpdateAPIView(generics.UpdateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    lookup_field = 'pk'
 
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        if not instance.content:
-            instance.content = instance.title
-            ##
 
 
 class ProductDestroyAPIView(generics.DestroyAPIView):
@@ -105,6 +96,12 @@ class ProductMixinView(
 
 
 # --------------- [2:17:16]
+# https://www.django-rest-framework.org/api-guide/permissions/#djangomodelpermissions
+# dotyczy tylko metod które odpowiadaja na zmiany - dlatego gdy chcemy ukryć dane- odczyt to trzeba napisać customowe permissions
+# POST requests require the user to have the add permission on the model.
+# PUT and PATCH requests require the user to have the change permission on the model.
+# DELETE requests require the user to have the delete permission on the model.
+
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     '''http://localhost:8000/api/products/
     https://www.django-rest-framework.org/api-guide/permissions/
@@ -115,10 +112,15 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     # permission_classes = [permissions.IsAuthenticated] #list ani create NIE zadziała
     # https://www.django-rest-framework.org/api-guide/permissions/#isauthenticatedorreadonly
     # permission_classes, authentication_classes ob są już w klasie bazowej w generics.GenericAPIView
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly] #create NIE zadziala. list zadziała
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly] #create NIE zadziala. list zadziała
+    
+    #https://www.django-rest-framework.org/api-guide/permissions/#djangomodelpermissions mega przydatne - daje prawa userom które admin stworzył
+    permission_classes = [permissions.DjangoModelPermissions] #create NIE zadziala. list zadziała
+
     # authentication.SessionAuthentication dajne dla standardowych endpointów dl aużytkownika który loguje się w przeglądarce
     # ale słabe dla 3rd services czy klienta JavaScript
-    authentication_classes = [authentication.SessionAuthentication] #jak się admin zaloguje w przeglądarce to widzi wszystko i moze dodawać nowe dane
+    # authentication_classes = [authentication.SessionAuthentication] #jak się admin zaloguje w przeglądarce to widzi wszystko i moze dodawać nowe dane
+    authentication_classes = [authentication.SessionAuthentication]
 
     def perform_create(self, serializer):
         print(serializer.validated_data)
@@ -130,3 +132,17 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
         instance = serializer.save(content=content)
 
 product_list_create_view = ProductListCreateAPIView.as_view()
+
+
+class ProductUpdateAPIView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+    permission_classes = [permissions.DjangoModelPermissions] #create NIE zadziala. list zadziała
+
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if not instance.content:
+            instance.content = instance.title
+            ##
