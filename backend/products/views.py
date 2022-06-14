@@ -1,4 +1,5 @@
 from rest_framework import generics # są jeszcze widoki na Update, DELETE/Destroy
+from rest_framework import mixins # do klas bazujących na generics.GenericAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404 #alternatywnie form django.http import Http404
@@ -8,6 +9,11 @@ from yaml import serialize #do rzucania wyjątków jako zworki na endpoint
 
 from .models import Product
 from .serializers import ProductSerializer
+
+#widac dziedziczenie po mixinach
+# class ListCreateAPIView(mixins.ListModelMixin,
+#                         mixins.CreateModelMixin,
+#                         GenericAPIView):
 
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
@@ -52,6 +58,10 @@ class ProductListAPIView(generics.ListAPIView):
     serializer_class = ProductSerializer
     # gdy chce się detail view dla jednego konkretnego obiektu
     #lookup_field = 'pk <- podobnie jak Product.objects.get(pk=123)
+    
+    def post(self, request, pk=None, *args, **kwargs): # DZIEDIZCZENIE po mixins.ListModelMixin
+        #można zaipmlementować tę mmetodę bo generics.ListAPIView dziedziczy z mixins.ListModelMixin
+        return self.list(request, *args, **kwargs) # metoda list pochodiz bezpośrednio z mixins.ListModelMixin,
 
 
 ############ 1:45:14 połączenie wszysktich trzech widoków w jeden (fajne gdy nie potrzeba osobnych endpointów)
@@ -116,3 +126,53 @@ class ProductDestroyAPIView(generics.DestroyAPIView):
         # https://www.django-rest-framework.org/api-guide/generic-views/#destroyapiview
         #instance można coś zrobić
         super().perform_destroy(instance) # super() - instancja klasy bazowej
+
+# ------------------ [2:04:19]
+#te mixiny to ropakowywanie / jawen użycie klas po który dizedzicza klasy  generics. CreateAPIView
+# https://www.django-rest-framework.org/api-guide/generic-views/#createapiview
+# class CreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
+#     pass
+
+#ta klasa która ma w sobie wiel emixinów daje sporo FLEXIBILITY and makes things a little more convoluted
+#raczej nie powinno sie isć w tę stronę jak nie potrzeba FLEXIBILITY ale daje też sporo extra możliwości
+class ProductMixinView( #te mixiny są trochę convoluted i teraz mam widok któy robi dwie rzeczy - listuje wszystkie i/lub zwraca pojedyczny obiekt
+    mixins.CreateModelMixin, #POST Create self.create
+    mixins.ListModelMixin, #mtoda self.list GET list
+    mixins.RetrieveModelMixin, #detail view potrzebuje pola lookup_field = 'pk' GET kontrketynu obiekt self.retrieve
+    generics.GenericAPIView
+    ):
+    # https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview
+    
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk' # pole ważne tylko dla metod które z tego pola korzystają mixins.ListModelMixin, czyli metoda self.list ma to pole gdzieś
+
+    def get(self, request, *args, **kwargs):
+        # cos abrdzo podobnego w działaniu do generics.ListAPIView chcę tu napisać
+        # https://www.django-rest-framework.org/api-guide/generic-views/#listmodelmixin
+        # metoda self.list nie patrzy na pole lookup_field = 'pk' 
+        print(args, kwargs) # () {'pk': 1}
+        pk = kwargs.get('pk') #wtedy nie trzeba w argumentach ustawiać pk = None def get(self, request, pk = None, *args, **kwargs)
+        if pk is not None:
+            #self.retrieve sama sobie wyciągnie pk z **kwargs  dzięki  polu lookup_field = 'pk' w klasie
+            return self.retrieve(request, *args, **kwargs ) #mixins.RetrieveModelMixin
+        return self.list(request, *args, **kwargs) # metoda list pochodiz bezpośrednio z mixins.ListModelMixin,
+    
+    def post(self, request, *args, **kwargs): #HTTP method -> post
+        # https://www.django-rest-framework.org/api-guide/generic-views/#createmodelmixin
+        return self.create(request, *args, **kwargs) # mixins.CreateModelMixin
+
+    def perform_create(self, serializer): # KOPIA metody z ProductListCreateAPIView(generics.ListCreateAPIView).perform_create(self, serializer):
+        print(serializer.validated_data) # OrderedDict([('title', 'This field is done!'), ('price', Decimal('32.99'))])
+        title = serializer.validated_data.get('title')
+        content = serializer.validated_data.get('content') or None
+        if content is None:
+            content = 'tihs is a signle view doing cool stuff'
+
+        instance = serializer.save(content=content)
+        #wszystko dizała identycznie
+        # OrderedDict([('title', 'This field is done!'), ('price', Decimal('32.99'))])
+        # generics.ListCreateAPIView ma tę metodę perform_create(self, serializer) bo dziedziczy po mixins.CreateModelMixin
+        # https://www.django-rest-framework.org/api-guide/generic-views/#listcreateapiview
+        # https://www.django-rest-framework.org/api-guide/generic-views/#createapiview
