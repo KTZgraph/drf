@@ -1,7 +1,8 @@
 import json
 from wsgiref import headers
-from django.http import JsonResponse, HttpResponse
+# from django.http import JsonResponse, HttpResponse
 from django.forms.models import model_to_dict
+from yaml import serialize
 from products.models import Product
 
 # 3 wersja
@@ -10,6 +11,9 @@ from rest_framework.decorators import api_view
 
 #4 wersja
 from products.serializers import ProductSerializer
+
+# 5 wersja
+from django.http import JsonResponse
 
 # def api_home1(request, *args, **kwargs):
 #     # ma emulować echo danych podonie jak "http://httpbin.org/anything"
@@ -72,18 +76,52 @@ from products.serializers import ProductSerializer
 
 #     return Response(data) #drf
 
-@api_view(['GET']) # drf
+# @api_view(['GET']) # drf
+# def api_home4(request, *args, **kwargs):
+#     """
+#     DRF API View
+#     """
+#     #bez DRF sprawdzanie metod
+#     # if request.method != "POST":
+#     #     return Response({'detail': 'GET not allowed'}, status=405)
+#     instance = Product.objects.all().order_by('?').first()
+#     data = {}
+#     if instance:
+#         # data = model_to_dict(instance, fields=['id', 'title', 'price', 'sale_price'])
+#         # serilizer za nas zrobi model to dict i jeszcze dołoży pola z metod jak 'sale_price' czy swoje dynamiczne pole 'my_dicsount' do JSONa
+#         data = ProductSerializer(instance).data #serilizers data in nice and clean way
+#     return Response(data) #drf klient wszystkie pola z serializera {"title":"Hello World again","content":"This product is amazing","price":"12.00","sale_price":"9.60","get_discount":"122"}
+
+
+
+# ---------------------1:17:26
+# bez rest_frameworka  @api_view(['POST']) - błąd Django czytsego
+# Forbidden (CSRF cookie not set.): /api/
+# [14/Jun/2022 19:51:51] "POST /api/ HTTP/1.1" 403 2870
+# @api_view(['POST']) # drf
+# def api_home(request, *args, **kwargs):
+#     """
+#     DRF API View
+#     """
+#     data = request.data
+#     return JsonResponse(data) 
+
+@api_view(['POST'])
 def api_home(request, *args, **kwargs):
     """
     DRF API View
     """
-    #bez DRF sprawdzanie metod
-    # if request.method != "POST":
-    #     return Response({'detail': 'GET not allowed'}, status=405)
-    instance = Product.objects.all().order_by('?').first()
-    data = {}
-    if instance:
-        # data = model_to_dict(instance, fields=['id', 'title', 'price', 'sale_price'])
-        # serilizer za nas zrobi model to dict i jeszcze dołoży pola z metod jak 'sale_price' czy swoje dynamiczne pole 'my_dicsount' do JSONa
-        data = ProductSerializer(instance).data #serilizers data in nice and clean way
-    return Response(data) #drf klient wszystkie pola z serializera {"title":"Hello World again","content":"This product is amazing","price":"12.00","sale_price":"9.60","get_discount":"122"}
+    #walidacja danych przy pomocy serializera <3
+    serializer = ProductSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True): #można dodatkowy paramater dać
+        # jedyny sposób na zapisywanie instancji
+        # instance = serializer.save() #tylko gdy rzeczyiwście chcemy zachować dane
+        # instance=form.save() # podobnie jak formsy
+        # instance=form.save(commit=False) tego w serilizerze nie można zrobić
+        print(serializer.data) #NIE zapisuje danuych
+        # data = serializer.data
+        return Response(serializer.data) 
+        # return Response(instance) # TypeError: Object of type Product is not JSON serializable
+    return Response({'invalid': "not good data"}, status=400)
+    # Bad Request: /api/
+    # [14/Jun/2022 20:09:22] "POST /api/ HTTP/1.1" 400 27

@@ -59,13 +59,54 @@ endpoint = "http://httpbin.org/anything" # zwróci odpwoiedź formatted data tha
 # print(get_response.status_code)
 
 
+# endpoint = "http://localhost:8000/api/"
+# # get_response = requests.get(endpoint, params={'abc': 123}) # HTTP  Request 
+# # params to są query parameters http://localhost:8000/api/?this_arg=this_value
+# # tutaj http://localhost:8000/api/?abc=123 można je bezpośrednio w urlu zawrzec
+# get_response = requests.get(endpoint, params={'abc': 123} ,json={'query': 'Hello World'}) # HTTP  Request 
+# # print(get_response.text) #print raw response
+# # print(get_response.status_code)
+# print(get_response.json())
+# print(get_response.headers)
+# print(get_response.text)
+
+
+# api_home5
 endpoint = "http://localhost:8000/api/"
 # get_response = requests.get(endpoint, params={'abc': 123}) # HTTP  Request 
 # params to są query parameters http://localhost:8000/api/?this_arg=this_value
 # tutaj http://localhost:8000/api/?abc=123 można je bezpośrednio w urlu zawrzec
-get_response = requests.get(endpoint, params={'abc': 123} ,json={'query': 'Hello World'}) # HTTP  Request 
+get_response = requests.post(endpoint, json={'title': 'Hello World'}) # HTTP  Request 
 # print(get_response.text) #print raw response
 # print(get_response.status_code)
+print(get_response.json()) #{'title': 'Hello World', 'content': None, 'my_discount': None}
+
+get_response = requests.post(endpoint, json={'content': 'Hello World'}) # HTTP  Request 
+# serwer się zepsuje
+# assert isinstance(response, HttpResponseBase), (
+# AssertionError: Expected a `Response`, `HttpResponse` or `HttpStreamingResponse` to be returned from 
+# the view, but received a `<class 'NoneType'>`
 print(get_response.json())
-print(get_response.headers)
-print(get_response.text)
+#klient się zepsuje 
+#     raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+# requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+# po dodatwoej dodpwoedzie w widoku
+# {'invalid': 'not good data'}
+
+# po porwace w widoku na 
+# if serializer.is_valid(raise_exception=True):
+# z automatu dostaję czystelną zwrotkę
+# {'title': ['This field is required.']}
+
+
+get_response = requests.post(endpoint, json={'title': None, 'content': 'Hello World'}) # HTTP  Request 
+print(get_response.json())
+# if serializer.is_valid(raise_exception=True): <-widok
+# {'title': ['This field may not be null.']} czytelna zwrtoka o błedzie
+
+
+get_response = requests.post(endpoint, json={'title': 'Abc123', 'price':'abc123', 'content': 'Hello World'}) # HTTP  Request 
+print(get_response.json())
+# if serializer.is_valid(raise_exception=True): <-widok
+#{'price': ['A valid number is required.']}
