@@ -1,4 +1,9 @@
 from rest_framework import generics # są jeszcze widoki na Update, DELETE/Destroy
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404 #alternatywnie form django.http import Http404
+from django.http import Http404
+from yaml import serialize #do rzucania wyjątków jako zworki na endpoint
 
 
 from .models import Product
@@ -47,3 +52,43 @@ class ProductListAPIView(generics.ListAPIView):
     serializer_class = ProductSerializer
     # gdy chce się detail view dla jednego konkretnego obiektu
     #lookup_field = 'pk <- podobnie jak Product.objects.get(pk=123)
+
+
+############ 1:45:14 połączenie wszysktich trzech widoków w jeden (fajne gdy nie potrzeba osobnych endpointów)
+@api_view(['GET', 'POST']) #CONFUSING :< login is all over the place ale FLEXIBLE <3
+def product_alt_view(request, pk=None, *args, **kwargs):
+    method = request.method #PUT- update, DESTROY -> delete
+
+    if method == 'GET':
+        # et request -> jak w detail view ProductDetailAPIView(generics.RetrieveAPIView)
+        #albo list view -> ProductCreateAPIView(generics.CreateAPIView) czy rozxbudowanej wersjiProductListCreateAPIView(generics.ListCreateAPIView)
+            
+        if pk is not None:
+            #detail view
+            # obj = Product.objects.filter(pk=pk)
+            # if not queryset.exist():
+            #     raise Http404
+
+            obj = get_object_or_404(Product, pk=pk) #obiekt albo Http404
+            data = ProductSerializer(obj, many=False).data
+            return Response(data)
+
+        #list view
+        queryset = Product.objects.all() #cześto tylko q jako nazwa zmiennej
+        data = ProductSerializer(queryset, many=True).data
+        return Response(data)
+
+    if method == 'POST':
+        #create an item  -> jak w ProductCreateAPIView(generics.CreateAPIView) czy rozxbudowanej wersjiProductListCreateAPIView(generics.ListCreateAPIView) 
+        # KOPIA class  ProductListCreateAPIView metoda perform_create(self, serializer)
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            title = serializer.validated_data.get('title')
+            content = serializer.validated_data.get('content') or None
+            if content is None:
+                content = title
+            serializer.save(content=content)
+            return Response(serializer.data) 
+        return Response({'invalid': "not good data"}, status=400)
+
+         
