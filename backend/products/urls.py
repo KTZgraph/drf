@@ -10,5 +10,8 @@ urlpatterns = [
     # path('/', views.product_create_view),
     #sam slash TO ZLY POMYSŁ bo już mam path('api/products/'  ->  wtedy wyjdzie api/products//
     path('alt/<int:pk>/', views.product_alt_view), #wszystko robi jedna klasa - tworzy i listuje poejdyncyz i wszzsytkie obiekty List, Read, Create
+    # 1:55:40 UpdateApiView & DestroyAPIView
+    path('<int:pk>/update/', views.ProductUpdateAPIView.as_view()),
+    path('<int:pk>/delete/', views.ProductDestroyAPIView.as_view()),
 
 ]

@@ -5,7 +5,7 @@ import requests
 # print(get_response.json())
 
 #alt - wszsytkie widoki
-endpoint = "http://localhost:8000/api/products/alt/1"
+endpoint = "http://localhost:8000/api/products/alt/10/"
 get_response = requests.get(endpoint, json={'title': 'Abc123', 'price':'abc123', 'content': 'Hello World'}) # HTTP  Request 
 print(get_response.json())
 

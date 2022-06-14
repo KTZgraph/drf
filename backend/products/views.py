@@ -24,7 +24,7 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
         if content is None:
             content = title
 
-        serializer.save(content=content)
+        instance = serializer.save(content=content)
         # można tutaj 1. dopisać usera serializer.save(user=self.request.user)
         # wysłać sygnał 2. send a Django signal
 
@@ -91,4 +91,28 @@ def product_alt_view(request, pk=None, *args, **kwargs):
             return Response(serializer.data) 
         return Response({'invalid': "not good data"}, status=400)
 
-         
+
+# --------- [1:56:05]
+# podobne do ProductDetailAPIView z tym że mogą zaierac dodatkowe dane i używać innych HTTP methods
+class ProductUpdateAPIView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def perform_update(self, serializer):
+        instance = serializer.save() # identyko jak instance ProductListCreateAPIView.perform_create
+        #można robić dodatkowe rzeczy instance jak trzeba
+        if not instance.content:
+            instance.content = instance.title
+            ##
+
+
+class ProductDestroyAPIView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def perform_destroy(self, instance):
+        # https://www.django-rest-framework.org/api-guide/generic-views/#destroyapiview
+        #instance można coś zrobić
+        super().perform_destroy(instance) # super() - instancja klasy bazowej
