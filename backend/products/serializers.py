@@ -17,13 +17,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'my_discount', #takieg czegoś nie ma modelu
         ]
 
-    def get_my_discount(self, obj): #get_moje_dynamiczne_pole_w_serializerze - bedzie w zwrotce widozne u klienta
+    def get_my_discount(self, obj): 
         if not hasattr(obj, 'id'):
             return None
         if not isinstance(obj, Product):
             return None
         return obj.get_discount()
-
-        # bez try - except lub if not hasattr(obj, 'id'): lub if not isinstance(obj, Product):
-        # return obj.get_discount()
-        # AttributeError: 'collections.OrderedDict' object has no attribute 'get_discount'
