@@ -1,13 +1,10 @@
-from types import GenericAlias
-
-
-from rest_framework import generics
+from rest_framework import generics # są jeszcze widoki na Update, DELETE/Destroy
 
 
 from .models import Product
 from .serializers import ProductSerializer
 
-class ProductCreateAPIView(generics.CreateAPIView):
+class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     #jeśli jestem użytkownikime ammdin to moze chcę pokaząc inne serializer?
     serializer_class = ProductSerializer
@@ -27,9 +24,22 @@ class ProductCreateAPIView(generics.CreateAPIView):
         # wysłać sygnał 2. send a Django signal
 
 #można taki lukier słakdniowy
-product_create_view = ProductCreateAPIView.as_view()
+product_list_create_view = ProductListCreateAPIView.as_view()
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
+    queryset = Product.objects.all()
+    # można customowe queryset
+    # def get_queryset(self):
+    #     return super().get_queryset()
+    serializer_class = ProductSerializer
+    # gdy chce się detail view dla jednego konkretnego obiektu
+    #lookup_field = 'pk <- podobnie jak Product.objects.get(pk=123)
+
+class ProductListAPIView(generics.ListAPIView):
+    '''
+    Not gonna use, bo mogę zmienić 
+    ProductCreateAPIView(generics.CreateAPIView) -> ProductListCreateAPIView(generics.ListCreateAPIView)
+    '''
     queryset = Product.objects.all()
     # można customowe queryset
     # def get_queryset(self):
